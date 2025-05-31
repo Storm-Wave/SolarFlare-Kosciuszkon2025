@@ -50,7 +50,7 @@ app.post("/submit", (req, res) => {
         const token = '2d14569a6e0c2d68529688d25e8d18e468ebb66d';
         const lat = entryData.latitude; // Latitude for Warsaw
         const lon = entryData.longtitude; // Longitude for Warsaw
-        const dateFrom = '2019-01-01';
+        const dateFrom = '2024-01-01';
         const dateTo = '2024-12-31';
         const capacity = entryData.pvSize;
 
