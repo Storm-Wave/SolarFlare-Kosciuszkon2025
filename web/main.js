@@ -13,11 +13,8 @@ class ROICalculator {
             const formData = getFormData();
             
             // Submit to API
-            const response = await submitData(formData);
-            
-            // Process response and create visualizations
-            // this.processResponse(response);
-            
+            const response = await submitData(formData)
+            this.processResponse(response);           
         } catch (error) {
             console.error('Submission error:', error);
             alert('Wystąpił błąd podczas obliczania. Spróbuj ponownie.');
@@ -25,17 +22,8 @@ class ROICalculator {
     }
     
     processResponse(data) {
-        // Clear existing charts
-        this.clearCharts();
-        
-        // Create results section if it doesn't exist
-        this.createResultsSection();
-        
-        // Update metrics
-        this.metricsManager.updateMetrics(data);
-        
         // Create charts
-        this.createAllCharts(data);
+        createChart(data);
     }
 }
 
