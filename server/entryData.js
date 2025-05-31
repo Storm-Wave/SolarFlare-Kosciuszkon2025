@@ -6,7 +6,7 @@
  * Represents an energy-related data entry.
  */
 class EntryData {
-    constructor(consumption, buyPrice, pvSize, pvProduction, sellPrice, pvCostPerKw, autoconsumption, priceIncrease) {
+    constructor(consumption, buyPrice, pvSize, pvProduction, sellPrice, pvCostPerKw, autoconsumption, priceIncrease, longtitude, latitude) {
         this.consumption = consumption;
         this.buyPrice = buyPrice;
         this.pvSize = pvSize;
@@ -15,6 +15,8 @@ class EntryData {
         this.pvCostPerKw = pvCostPerKw;
         this.autoconsumption = autoconsumption;
         this.priceIncrease = priceIncrease;
+        this.longtitude = longtitude;
+        this.latitude = latitude;
     }
 }
 
@@ -36,7 +38,9 @@ function createEntryData(req) {
         sellPrice,
         pvCostPerKw,
         autoconsumption,
-        priceIncrease
+        priceIncrease,
+        altitute,
+        longtitude
     } = req.body;
 
     return new EntryData(
@@ -47,7 +51,9 @@ function createEntryData(req) {
         sellPrice,
         pvCostPerKw,
         autoconsumption,
-        priceIncrease
+        priceIncrease,
+        altitute,
+        longtitude
     );
 }
 

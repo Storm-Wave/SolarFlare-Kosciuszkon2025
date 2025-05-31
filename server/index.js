@@ -48,8 +48,8 @@ app.post("/submit", (req, res) => {
     // Example usage
     (async () => {
         const token = '2d14569a6e0c2d68529688d25e8d18e468ebb66d'; // Replace with your actual API token
-        const lat = 52.23; // Latitude for Warsaw
-        const lon = 21.01; // Longitude for Warsaw
+        const lat = entryData.latitude; // Latitude for Warsaw
+        const lon = entryData.longtitude; // Longitude for Warsaw
         const dateFrom = '2019-01-01';
         const dateTo = '2024-12-31';
         const capacity = entryData.pvSize;
