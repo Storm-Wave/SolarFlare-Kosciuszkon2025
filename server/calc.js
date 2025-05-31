@@ -9,36 +9,28 @@ class CalcData  {
 const years = 25;
 
 let calculateYearlyReturn = function(entryData) {
-    let prevYearSellPrice = entryData.sellPrice;
-    let prevYearBuyPrice = entryData.buyPrice;
-    let cumulatedSavings = 0;
-    let cumulatedCostPV = 0;
-    let cumulatedCostNoPV = 0;
-    let yearlySavings = [];
-    let yearlyCostsPV = [];
-    let yearlyCostsNoPV = [];
-    for (y = 0; y < years; y++) {
-        let yearSellPrice = prevYearSellPrice * (1 + entryData.priceIncrease);
-        let yearBuyPrice = prevYearBuyPrice * (1 + entryData.priceIncrease);
-        prevYearSellPrice = yearSellPrice;
-        prevYearBuyPrice = yearBuyPrice;
+    let energyBuy = entryData.buyPrice*(1+entryData.priceIncrease); // price for buying energy at current year
+    let energySell = entryData.sellPrice*(1+entryData.priceIncrease); // price for selling energy at current year
 
-        let costNoPV = yearBuyPrice * entryData.consumption;
-        let energyProduced = entryData.pvProduction * entryData.pvSize;
-        let autoconsumption = entryData.autoconsumption * energyProduced;
-        let energySold = energyProduced - autoconsumption;
-        let energyConsumedWithPV = entryData.consumption - autoconsumption;
-        let profit = yearSellPrice * energySold;
-        let costPV = yearBuyPrice * energyConsumedWithPV - profit;
+    let oldPrice = energyBuy*entryData.consumption; // cumulative price paid normally for the year 
+    let installationCost = entryData.pvSize*entryData.pvCostPerKw;
+    let newPrice = installationCost+energyBuy*(Math.max(entryData.consumption-entryData.pvProduction, 0)) - energySell*(Math.max(entryData.pvProduction - entryData.consumption, 0)); // cumulative price for this year with installation
 
-        cumulatedSavings += costNoPV - costPV;
-        cumulatedCostPV += costPV;
-        cumulatedCostNoPV += costNoPV;
+    let yearlyCostsPV = Array(years)
+    let yearlyCostsNoPV = Array(years);
+    let yearlySavings = Array(years);
+    for(let i = 0; i < years; i++) {
+        yearlyCostsPV[i] = newPrice;
+        yearlyCostsNoPV[i] = oldPrice;
+        yearlySavings[i] = yearlyCostsNoPV[i]-yearlyCostsPV[i];
+        
+        energyBuy = energyBuy*(1+entryData.priceIncrease);
+        energySell = energySell*(1+entryData.priceIncrease);
 
-        yearlySavings.push(cumulatedSavings);
-        yearlyCostsNoPV.push(costNoPV);
-        yearlyCostsPV.push(costPV);
+        oldPrice += energyBuy*entryData.consumption;
+        newPrice += energyBuy*(Math.max(entryData.consumption-entryData.pvProduction, 0)) - energySell*(Math.max(entryData.pvProduction - entryData.consumption, 0));  
     }
+
 
     return new CalcData(
         yearlySavings,
