@@ -1,40 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
-/**
- * Konwertuje Unix timestamp do formatu ISO (YYYY-MM-DD).
- * @param {string} unixTimestamp
- * @returns {string} sformatowana data
- */
-function formatUnixToDate(unixTimestamp) {
-    const date = new Date(parseInt(unixTimestamp) * 1000); // Unix timestamp w sekundach
-    return date;//.toISOString().split('T')[0];     // Zwraca tylko YYYY-MM-DD
-}
-
-/**
- * Zapisuje dane JSON (z datą w formacie Unix timestamp) do pliku CSV.
- * @param {Array<{date: string, value: number}>} data - Dane wejściowe.
- * @param {string} outputFile - Ścieżka do pliku wynikowego CSV.
- */
-function saveJsonToCsv(data, outputFile = 'dane.csv') {
-    if (!Array.isArray(data) || data.length === 0) {
-        console.error('Brak danych do zapisania.');
-        return;
-    }
-
-    const headers = 'date,value';
-    const rows = data.map(item => {
-        const formattedDate = formatUnixToDate(item.date);
-        return `${formattedDate},${item.value}`;
-    });
-
-    const csvContent = [headers, ...rows].join('\n');
-
-    fs.writeFileSync(path.resolve(outputFile), csvContent, 'utf8');
-    console.log(`Dane zapisane do pliku: ${outputFile}`);
-}
-
-
 // ---------------------------
 // Imports & Configuration
 // ---------------------------
@@ -44,6 +7,8 @@ const bodyParser = require("body-parser");
 const { createEntryData } = require("./entryData.js");
 const { calculateYearlyReturn } = require("./calc.js");
 const { fetchSolarData } = require("./geo.js");
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const PORT = 3000;
 
@@ -64,6 +29,40 @@ function log(message) {
   console.log(`[${timestamp}] ${message}`);
 }
 
+/**
+ * Konwertuje Unix timestamp do formatu ISO (YYYY-MM-DD).
+ * @param {string} unixTimestamp
+ * @returns {string} sformatowana data
+ */
+function formatUnixToDate(unixTimestamp) {
+    const date = new Date(parseInt(unixTimestamp) * 1000); // Unix timestamp w sekundach
+    return date; // Zwraca tylko YYYY-MM-DD
+}
+
+/**
+ * Zapisuje dane JSON (z datą w formacie Unix timestamp) do pliku CSV.
+ * @param {Array<{date: string, value: number}>} data - Dane wejściowe.
+ * @param {string} outputFile - Ścieżka do pliku wynikowego CSV.
+ */
+function saveJsonToCsv(data, outputFile = 'dane.csv') {
+    console.log(data);
+    if (!Array.isArray(data) || data.length === 0) {
+        console.error('Brak danych do zapisania.');
+        return;
+    }
+
+    const headers = 'date,value';
+    const rows = data.map(item => {
+        const formattedDate = formatUnixToDate(item.date);
+        return `${formattedDate},${item.value}`;
+    });
+
+    const csvContent = [headers, ...rows].join('\n');
+
+    fs.writeFileSync(path.resolve(outputFile), csvContent, 'utf8');
+    console.log(`Dane zapisane do pliku: ${outputFile}`);
+}
+
 // ---------------------------
 // Routes
 // ---------------------------
@@ -78,7 +77,7 @@ app.post("/submit", (req, res) => {
 
     log(`Received /submit request`);
     for (const [key, value] of Object.entries(entryData)) {
-      log(`  ${key}: ${value}`);
+      log(`${key}: ${value}`);
     }
     log(`End of /submit request`);
    
@@ -101,11 +100,10 @@ app.post("/submit", (req, res) => {
         });
 
         if (solarData) {
-            console.log('Hourly Solar Data:', solarData);
-            saveJsonToCsv(Object.values(solarData));
+            const arrayData = Object.entries(solarData).map(([timestamp, data]) => [Number(timestamp), data.electricity]);
+            saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
-
         const calculatedData = calculateYearlyReturn(entryData);
 
         res.status(200).json({

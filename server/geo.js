@@ -32,11 +32,6 @@ async function fetchSolarData({
   dataset = 'merra2',
   token
 }) {
-    console.log(lat);
-    console.log(lon);
-    console.log(dateFrom);
-    console.log(dateTo);
-    console.log(token);
   // Base URL for Renewables.ninja PV API
   const url = 'https://www.renewables.ninja/api/data/pv';
   // Construct URL query parameters
