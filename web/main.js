@@ -1,5 +1,6 @@
 // Main application logic
 class ROICalculator {
+    
     async submit() {
         try {
             // Validate inputs
