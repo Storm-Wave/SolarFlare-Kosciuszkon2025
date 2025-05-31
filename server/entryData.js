@@ -40,7 +40,7 @@ function createEntryData(req) {
         autoconsumption,
         priceIncrease,
         latitude,
-        longitude
+        longtitude
     } = req.body;
 
     return new EntryData(
@@ -53,7 +53,7 @@ function createEntryData(req) {
         autoconsumption,
         priceIncrease,
         latitude,
-        longitude
+        longtitude
     );
 }
 
