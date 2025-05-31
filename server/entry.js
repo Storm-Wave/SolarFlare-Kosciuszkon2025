@@ -1,9 +1,16 @@
-class entryData {
-    constructor(consumption, buyPrice, pvSize, pyProduction, sellPrice, pvCostPerKw, autoconsumption, priceIncrease) {
+// ---------------------------
+// EntryData Class Definition
+// ---------------------------
+
+/**
+ * Represents an energy-related data entry.
+ */
+class EntryData {
+    constructor(consumption, buyPrice, pvSize, pvProduction, sellPrice, pvCostPerKw, autoconsumption, priceIncrease) {
         this.consumption = consumption;
         this.buyPrice = buyPrice;
         this.pvSize = pvSize;
-        this.pyProduction = pyProduction;
+        this.pvProduction = pvProduction;
         this.sellPrice = sellPrice;
         this.pvCostPerKw = pvCostPerKw;
         this.autoconsumption = autoconsumption;
@@ -11,12 +18,44 @@ class entryData {
     }
 }
 
+// ---------------------------
+// Factory Function
+// ---------------------------
 
-function import_data(req) {
-    const {consumption, buyPrice, pvSize, pvProduction, sellPrice, pvCostPerKw, autoconsumption, priceIncrease} = req.body;
-    return entryData(consumption, buyPrice, pvSize, pvProduction, sellPrice, pvCostPerKw, autoconsumption, priceIncrease);
+/**
+ * Creates an EntryData object from an HTTP request body.
+ * @param {Object} req - Express request object with a body containing input data.
+ * @returns {EntryData} - A populated EntryData instance.
+ */
+function createEntryData(req) {
+    const {
+        consumption,
+        buyPrice,
+        pvSize,
+        pvProduction,
+        sellPrice,
+        pvCostPerKw,
+        autoconsumption,
+        priceIncrease
+    } = req.body;
+
+    return new EntryData(
+        consumption,
+        buyPrice,
+        pvSize,
+        pvProduction,
+        sellPrice,
+        pvCostPerKw,
+        autoconsumption,
+        priceIncrease
+    );
 }
 
+// ---------------------------
+// Module Exports
+// ---------------------------
 
-module.exports = {Entry_data, import_data};
-
+module.exports = {
+    EntryData,
+    createEntryData
+};

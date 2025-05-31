@@ -12,5 +12,14 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Storm-Wave/Kosciuszkon.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Storm-Wave/Kosciuszkon/issues"
+  },
+  "homepage": "https://github.com/Storm-Wave/Kosciuszkon#readme"
 }
