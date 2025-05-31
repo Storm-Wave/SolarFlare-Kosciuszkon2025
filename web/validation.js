@@ -19,7 +19,7 @@ function validateInputs() {
     
     const fields = [
         'consumption', 'buyPrice', 'pvSize', 'pvProduction', 
-        'sellPrice', 'pvCostPerKw', 'autoconsumption', 'priceIncrease', 'longtitude', 'altitude'
+        'sellPrice', 'pvCostPerKw', 'autoconsumption', 'priceIncrease', 'longtitude', 'latitude'
     ];
     
     let hasErrors = false;
