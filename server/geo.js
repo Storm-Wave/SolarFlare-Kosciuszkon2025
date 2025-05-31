@@ -34,7 +34,6 @@ async function fetchSolarData({
 }) {
   // Base URL for Renewables.ninja PV API
   const url = 'https://www.renewables.ninja/api/data/pv';
-
   // Construct URL query parameters
   const params = new URLSearchParams({
     lat: lat.toString(),
