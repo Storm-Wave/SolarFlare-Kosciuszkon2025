@@ -28,11 +28,19 @@ async function initMap() {
 
     autocomplete.addListener("place_changed", () => {
         infowindow.close();
+        console.log("gather latitude longtitude");
+
         const place = autocomplete.getPlace();
 
         if (!place.geometry || !place.geometry.location) {
             return;
         }
+
+        // Get latitude and longitude
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        console.log("Coordinates:", { lat, lng });
+        setCoordinates(lat, lng);
 
         if (place.geometry.viewport) {
             map.fitBounds(place.geometry.viewport);
@@ -48,7 +56,6 @@ async function initMap() {
         marker.setVisible(true);
         
         infowindowContent.children.namedItem("place-name").textContent = place.name;
-        infowindowContent.children.namedItem("place-id").textContent = place.place_id;
         infowindowContent.children.namedItem("place-address").textContent = place.formatted_address;
         
         infowindow.open(map, marker);

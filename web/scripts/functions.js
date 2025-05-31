@@ -20,3 +20,14 @@ function toggleLocationMode(mode) {
         initMap();
     }
 }
+
+function setCoordinates(lat, lng){
+    const coords = document.getElementById("coordsDisplay");
+    const manualLat = document.getElementById("latitude");
+    const manualLng = document.getElementById("longtitude");
+
+    coords.innerHTML = "Szerokość: " + lat +"°, " + "Długość: " + lng;
+    manualLat.value = lat;
+    manualLng.value = lng;
+
+}
