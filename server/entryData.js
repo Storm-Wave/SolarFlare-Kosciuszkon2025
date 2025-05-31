@@ -39,7 +39,7 @@ function createEntryData(req) {
         pvCostPerKw,
         autoconsumption,
         priceIncrease,
-        altitute,
+        latitude,
         longtitude
     } = req.body;
 
@@ -52,7 +52,7 @@ function createEntryData(req) {
         pvCostPerKw,
         autoconsumption,
         priceIncrease,
-        altitute,
+        latitude,
         longtitude
     );
 }
