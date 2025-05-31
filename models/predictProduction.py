@@ -5,9 +5,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-import xgboost as xgb
 import joblib
 import matplotlib.pyplot as plt
+import requests
+import pandas as pd
+from datetime import datetime, timedelta, date
+
+features = ['hour', 'month', 'dayofyear']#, "temperature_2m", "windspeed_10m", "cloudcover"]
+
 
 # 1. Wczytanie danych
 def load_data(file_path):
@@ -35,7 +40,6 @@ def train_models(X_train, y_train, X_test, y_test):
         'LinearRegression': LinearRegression(),
         'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42),
         'GradientBoosting': GradientBoostingRegressor(n_estimators=100, random_state=42),
-        'XGBoost': xgb.XGBRegressor(n_estimators=100, random_state=42)
     }
 
     best_model = None
@@ -61,8 +65,25 @@ def save_model(model, filename='best_power_model.pkl'):
     joblib.dump(model, filename)
 
 # 6. Główna funkcja
-def main(file_path):
+def main(file_path, lon, lat):
+    MAX_END_DATE = date(2025, 1, 30)  # tymczasowo przyjmujemy jako max dostępne
+
+    today = date.today()
+    end_date = min(today - timedelta(days=1), MAX_END_DATE)
+    start_date = end_date - timedelta(days=365)
+
+    print("🔍 Najbliższa stacja (lub siatka ERA5):")
+    info = get_nearest_station(lat, lon)
+    print(info)
+
+    df_weather = get_weather_history(
+        lat, lon,
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat()
+    )
+
     df = load_data(file_path)
+    df = pd.merge(df, df_weather, on='timestamp')
     df = extract_features(df)
     X_train, X_test, y_train, y_test = prepare_data(df)
     model = train_models(X_train, y_train, X_test, y_test)
@@ -82,7 +103,6 @@ def generate_future_features(start_time, years=25):
     return df_future
 
 def forecast_future(model, df_future, output_csv='prognoza_25_lat.csv'):
-    features = ['hour', 'month', 'dayofyear']
     predictions = model.predict(df_future[features])
     df_future['predicted_power'] = predictions
     df_future = df_future.round(3)
@@ -90,9 +110,61 @@ def forecast_future(model, df_future, output_csv='prognoza_25_lat.csv'):
     print(f"Prognoza zapisana do pliku: {output_csv}")
 
 
+def get_nearest_station(lat, lon):
+    url = "https://archive-api.open-meteo.com/v1/era5"
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "start_date": "2024-01-01",
+        "end_date": "2024-01-01",  # jeden dzień wystarczy do identyfikacji stacji
+        "hourly": "temperature_2m",
+        "timezone": "Europe/Warsaw"
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+
+    meta = response.json().get("generationtime_ms", None)
+    station_info = {
+        "source": response.json().get("hourly_units", {}),
+        "dataset": "ERA5 (reanalysis)",
+        "note": "Open-Meteo automatycznie wybiera najbliższą stację lub grid punkt"
+    }
+
+    return station_info
+
+
+
+def get_weather_history(lat, lon, start_date, end_date, variables=None):
+    if variables is None:
+        variables = ["temperature_2m", "windspeed_10m", "cloudcover"]
+
+    url = "https://archive-api.open-meteo.com/v1/era5"
+
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "start_date": start_date,
+        "end_date": end_date,
+        "hourly": ",".join(variables),
+        "timezone": "Europe/Warsaw"
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+
+    data = response.json()
+
+    df = pd.DataFrame({"timestamp": data["hourly"]["time"]})
+    for var in variables:
+        df[var] = data["hourly"][var]
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    return df
+
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) != 2:
-        print("Użycie: python regression_power_model.py <dane.csv>")
+    if len(sys.argv) != 4:
+        print("Użycie: python regression_power_model.py <dane.csv> <lon> <lat>")
     else:
-        main(sys.argv[1])
+        main(sys.argv[1], sys.argv[2], sys.argv[3])
