@@ -8,7 +8,7 @@ const { createEntryData } = require("./entryData.js");
 const { hourlyReturn, yearlyReturn } = require("./calc.js");
 const { fetchSolarData } = require("./geo.js");
 const fs = require('fs');
-const path = require('path');
+const { spawn } = require('child_process');
 const app = express();
 const { powerPerDay } = require("./powerPerDay.js");
 const PORT = 3000;
@@ -60,7 +60,7 @@ function saveJsonToCsv(data, outputFile = 'dane.csv') {
       if (err) {
         console.error('Error writing CSV file:', err);
       } else {
-        console.log(`CSV file saved as ${outputFile}`);
+        log(`CSV file saved as ${outputFile}`);
       }
     });
 }
@@ -86,8 +86,8 @@ app.post("/submit", (req, res) => {
     // Example usage
     (async () => {
         const token = '2d14569a6e0c2d68529688d25e8d18e468ebb66d';
-        const lat = entryData.latitude; // Latitude for Warsaw
-        const lon = entryData.longtitude; // Longitude for Warsaw
+        const lat = entryData.latitude;
+        const lon = entryData.longtitude;
         const dateFrom = '2024-01-01';
         const dateTo = '2024-12-31';
         const capacity = entryData.pvSize;
@@ -101,26 +101,31 @@ app.post("/submit", (req, res) => {
             token
         });
 
-        if (solarData) {
+        if(solarData) {
             const arrayData = Object.entries(solarData).map(([timestamp, data]) => [new Date(parseInt(timestamp)), data.electricity]);
             saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
-        const calculatedDataH = hourlyReturn(entryData, powerPerDay);
-        const calculatedData = calculateYearlyReturn(calculatedDataH);
-        res.status(200).json({
-          message: "Data received and calculated successfully",
-          calculatedData: {
-            yearlySavings: calculatedData.yearlySavings,
-            yearlyCostsNoPV: calculatedData.yearlyCostsNoPV,
-            yearlyCostsPV: calculatedData.yearlyCostsPV,
-          }
+        const python = spawn('python3', ["../models/predictProduction/py", "../dane.csv", entryData.longtitude, entryData.latitude]);
+        python.on('close', (code) => {
+            console.log(code);
+            return;
+            const calculatedDataH = hourlyReturn(entryData, powerPerDay);
+            const calculatedData = calculateYearlyReturn(calculatedDataH);
+            res.status(200).json({
+              message: "Data received and calculated successfully",
+              calculatedData: {
+                yearlySavings: calculatedData.yearlySavings,
+                yearlyCostsNoPV: calculatedData.yearlyCostsNoPV,
+                yearlyCostsPV: calculatedData.yearlyCostsPV,
+              }
+            });
+            log(`Sent calculated data`);
+            for (const [key, value] of Object.entries(calculatedData)) {
+              log(`  ${key}: ${value}`);
+            }
+            log(`End of sent calculated data`);
         });
-        log(`Sent calculated data`);
-        for (const [key, value] of Object.entries(calculatedData)) {
-          log(`  ${key}: ${value}`);
-        }
-        log(`End of sent calculated data`);
     });
   } catch (error) {
     log(`Error in /submit: ${error.message}`);
