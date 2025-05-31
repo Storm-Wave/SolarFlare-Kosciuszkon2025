@@ -41,26 +41,27 @@ function formatUnixToDate(unixTimestamp) {
 
 /**
  * Zapisuje dane JSON (z datą w formacie Unix timestamp) do pliku CSV.
- * @param {Array<{date: string, value: number}>} data - Dane wejściowe.
+ * @param {Array<{date: number, value: number}>} data - Dane wejściowe.
  * @param {string} outputFile - Ścieżka do pliku wynikowego CSV.
  */
 function saveJsonToCsv(data, outputFile = 'dane.csv') {
-    console.log(data);
     if (!Array.isArray(data) || data.length === 0) {
         console.error('Brak danych do zapisania.');
         return;
     }
 
-    const headers = 'date,value';
-    const rows = data.map(item => {
-        const formattedDate = formatUnixToDate(item.date);
-        return `${formattedDate},${item.value}`;
+    const csvHeader = 'timestamp,electricity\n';
+    const csvRows = data.map(([timestamp, electricity]) => `${timestamp},${electricity}`).join('\n');
+    const csvContent = csvHeader + csvRows;
+
+    // Write to file
+    fs.writeFile(outputFile, csvContent, 'utf8', (err) => {
+      if (err) {
+        console.error('Error writing CSV file:', err);
+      } else {
+        console.log(`CSV file saved as ${outputFile}`);
+      }
     });
-
-    const csvContent = [headers, ...rows].join('\n');
-
-    fs.writeFileSync(path.resolve(outputFile), csvContent, 'utf8');
-    console.log(`Dane zapisane do pliku: ${outputFile}`);
 }
 
 // ---------------------------
