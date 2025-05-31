@@ -50,8 +50,8 @@ function saveJsonToCsv(data, outputFile = 'dane.csv') {
         return;
     }
 
-    const csvHeader = 'timestamp,electricity\n';
-    const csvRows = data.map(([timestamp, electricity]) => `${timestamp},${electricity}`).join('\n');
+    const csvHeader = 'datetime,value\n';
+    const csvRows = data.map(([timestamp, electricity]) => `${timestamp.toISOString().split('.')[0]},${electricity}`).join('\n');
     const csvContent = csvHeader + csvRows;
 
     // Write to file
@@ -101,7 +101,7 @@ app.post("/submit", (req, res) => {
         });
 
         if (solarData) {
-            const arrayData = Object.entries(solarData).map(([timestamp, data]) => [timestamp, data.electricity]);
+            const arrayData = Object.entries(solarData).map(([timestamp, data]) => [new Date(parseInt(timestamp)), data.electricity]);
             saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
