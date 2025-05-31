@@ -1,5 +1,11 @@
 // Main application logic
 class ROICalculator {
+    constructor() {
+        this.charts = {
+            returnOnInvestment: null,
+            costComparison: null
+        };
+    }
     
     async submit() {
         try {
@@ -22,8 +28,22 @@ class ROICalculator {
     }
     
     processResponse(data) {
+        this.destroyCharts();
         // Create charts
-        createChart(data);
+        this.charts.returnOnInvestment = returnOnInvestment(data);
+        this.charts.costComparison = createCostComparisonChart(data);
+    }
+
+    destroyCharts(){
+        if (this.charts.returnOnInvestment) {
+            this.charts.returnOnInvestment.destroy();
+            this.charts.returnOnInvestment = null;
+        }
+        
+        if (this.charts.costComparison) {
+            this.charts.costComparison.destroy();
+            this.charts.costComparison = null;
+        }
     }
 }
 
