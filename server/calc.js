@@ -1,44 +1,70 @@
-class CalcData  {
+class CalcDataH  {
+    constructor(hourlySavings, hourlyCostsNoPV, hourlyCostsPV) {
+        this.hourlySavings = hourlySavings;
+        this.hourlyCostsNoPV = hourlyCostsNoPV;
+        this.hourlyCostsPV = hourlyCostsPV;
+    }
+}
+
+class CalcDataY {
     constructor(yearlySavings, yearlyCostsNoPV, yearlyCostsPV) {
         this.yearlySavings = yearlySavings;
         this.yearlyCostsNoPV = yearlyCostsNoPV;
         this.yearlyCostsPV = yearlyCostsPV;
     }
+
 }
 
 const years = 25;
+const hours = years*365*24;
 
-let calculateYearlyReturn = function(entryData) {
-    let energyBuy = entryData.buyPrice*(1+entryData.priceIncrease); // price for buying energy at current year
-    let energySell = entryData.sellPrice*(1+entryData.priceIncrease); // price for selling energy at current year
+let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) {
+    let hourlySavings = Array(hours);
+    let hourlyCostsNoPV = Array(hours);
+    let hourlyCostsPV = Array(hours);
+    hourlyCostsPV[0] = entryData.pvSize*entryData.pvCostPerKw; //initial cost
+    hourlyCostsNoPV[0] = 0; // no initial cost
 
-    let oldPrice = energyBuy*entryData.consumption; // cumulative price paid normally for the year 
-    let installationCost = entryData.pvSize*entryData.pvCostPerKw;
-    let newPrice = installationCost+energyBuy*(Math.max(entryData.consumption-entryData.pvProduction, 0)) - energySell*(Math.max(entryData.pvProduction - entryData.consumption, 0)); // cumulative price for this year with installation
+    let hourly_use = entryData.panelWear/365/24;
+    let hourly_pvProd = entryData.pvProduction/365/24;
+    for(let i = 0; i < hours; i++) {
+        hourlyCostsNoPV[i] += powerPerDay[i%24]*entryData.consumption*buyPerH[i];
+        hourlyCostsPV[i] += buyPerH[i]*Math.max((powerPerDay[i%24]*entryData.consumption-sunPerH[i]*hourly_pvProd), 0);
+        hourlyCostsPV[i] -= sellPerH[i]*Math.max((-powerPerDay[i%24]*entryData.consumption*buyPerH[i]+sunPerH[i]*hourly_pvProd), 0);
 
-    let yearlyCostsPV = Array(years)
-    let yearlyCostsNoPV = Array(years);
-    let yearlySavings = Array(years);
-    for(let i = 0; i < years; i++) {
-        yearlyCostsPV[i] = newPrice;
-        yearlyCostsNoPV[i] = oldPrice;
-        yearlySavings[i] = yearlyCostsNoPV[i]-yearlyCostsPV[i];
-        
-        energyBuy = energyBuy*(1+entryData.priceIncrease);
-        energySell = energySell*(1+entryData.priceIncrease);
-
-        oldPrice += energyBuy*entryData.consumption;
-        newPrice += energyBuy*(Math.max(entryData.consumption-entryData.pvProduction, 0)) - energySell*(Math.max(entryData.pvProduction - entryData.consumption, 0));  
+        hourly_pvProd *= 1 - hourly_use;
+        hourlySavings[i] = hourlyCostsPV[i] - hourlyCostsNoPV[i];
     }
 
 
-    return new CalcData(
+    return new CalcDataH(
+        hourlySavings,
+        hourlyCostsNoPV,
+        hourlyCostsPV);
+}
+
+function yearlyReturn(dataH) {
+    let yearlySavings = Array(years);
+    let yearlyCostsPV = Array(years);
+    let yearlyCostsNoPV = Array(years);
+
+    let j = -1;
+    for(let i = 0; i < hours; i++) {
+        if(i % 24*365 == 0) j++;
+        yearlySavings[j] += dataH.hourlySavings[i];
+        yearlyCostsPV[j] += dataH.hourlyCostsNoPV[i];
+        yearlyCostsNoPV[j] += dataH.hourlyCostsPV[i];
+    }
+
+    return new CalcDataY(
         yearlySavings,
         yearlyCostsNoPV,
-        yearlyCostsPV);
+        yearlyCostsPV,
+    );
 }
 
 
 module.exports = {
-    calculateYearlyReturn 
+    yearlyReturn,
+    hourlyReturn, 
 };

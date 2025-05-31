@@ -5,11 +5,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { createEntryData } = require("./entryData.js");
-const { calculateYearlyReturn } = require("./calc.js");
+const { hourlyReturn, yearlyReturn } = require("./calc.js");
 const { fetchSolarData } = require("./geo.js");
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const { powerPerDay } = require("./powerPerDay.js");
 const PORT = 3000;
 
 // ---------------------------
@@ -105,8 +106,8 @@ app.post("/submit", (req, res) => {
             saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
-        const calculatedData = calculateYearlyReturn(entryData);
-        
+        const calculatedDataH = hourlyReturn(entryData, powerPerDay);
+        const calculatedData = calculateYearlyReturn(calculatedDataH);
         res.status(200).json({
           message: "Data received and calculated successfully",
           calculatedData: {
