@@ -56,6 +56,5 @@ function createEntryData(req) {
 // ---------------------------
 
 module.exports = {
-    EntryData,
     createEntryData
 };

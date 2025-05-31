@@ -39,8 +39,14 @@ let calculateYearlyReturn = function(entryData) {
         yearlyCostsNoPV.push(costNoPV);
         yearlyCostsPV.push(costPV);
     }
+
     return new CalcData(
         yearlySavings,
         yearlyCostsNoPV,
         yearlyCostsPV);
 }
+
+
+module.exports = {
+    calculateYearlyReturn 
+};
