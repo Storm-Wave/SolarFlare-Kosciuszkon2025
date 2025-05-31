@@ -101,12 +101,12 @@ app.post("/submit", (req, res) => {
         });
 
         if (solarData) {
-            const arrayData = Object.entries(solarData).map(([timestamp, data]) => [Number(timestamp), data.electricity]);
+            const arrayData = Object.entries(solarData).map(([timestamp, data]) => [timestamp, data.electricity]);
             saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
         const calculatedData = calculateYearlyReturn(entryData);
-
+        
         res.status(200).json({
           message: "Data received and calculated successfully",
           calculatedData: {
