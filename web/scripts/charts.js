@@ -105,7 +105,7 @@ function returnOnInvestmentH(data, selectedYear){
                         maxTicksLimit: 12,
                         callback: function(value, index) {
                             const monthNames = getMonthlyLabels();
-                            const monthIndex = Math.floor((index / yearlyHourlyData) * 12);
+                            const monthIndex = Math.floor((index / 8760) * 12);
                             return monthIndex < 12 ? monthNames[monthIndex] : '';
                         }
                     }
@@ -281,6 +281,53 @@ function meanEnergyConsumption(){
                         text: 'Zużycie (kWh)'
                     }
                 },
+            }
+        }
+    });
+    return myChart
+}
+
+function reliefInfluence(data, iters){
+    const ctx = document.getElementById("reliefInfluence");
+    const d = new Date();
+    let currYear = d.getFullYear();
+    // console.log(data)
+    const myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: fillArray(currYear, iters), 
+            datasets: [{
+                label: "Roczne oszczędności",
+                data: data.calculatedData.yearlySavings, 
+                borderWidth: 1
+            },
+            {
+                label: "Wpływ ulgi",
+                data: data.calculatedData.yearlyReliefSavings,
+                borderColor: '#ff6b6b',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+            title: {
+                display: true,
+                text: 'Wpływ ulgi'
+            }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Kwota (PLN)'
+                    },
+                    stacked: true
+                },
+                x: {
+                    stacked: true
+                }
             }
         }
     });
