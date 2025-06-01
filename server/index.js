@@ -134,10 +134,15 @@ app.post("/submit", (req, res) => {
             const calculatedData = yearlyReturn(calculatedDataH);
             res.status(200).json({
               message: "Data received and calculated successfully",
+              calculatedDataH: {
+                hourlySavings: calculatedDataH.hourlySavings;
+                hourlyCostsNoPV: calculatedDataH.hourlyCostsNoPV;
+                hourlyCostsPV: calculatedDataH.hourlyCostsPV;
+              },
               calculatedData: {
                 yearlySavings: calculatedData.yearlySavings,
                 yearlyCostsNoPV: calculatedData.yearlyCostsNoPV,
-                yearlyCostsPV: calculatedData.yearlyCostsPV,
+                yearlyCostsPV: calculatedData.yearlyCostsPV
               }
             });
             log(`Sent calculated data`);

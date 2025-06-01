@@ -25,8 +25,10 @@ let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) 
     hourlyCostsPV[0] = entryData.pvSize*entryData.pvCostPerKw; //initial cost
     let hourly_pvProd = entryData.pvSize;
     let daily_cons = entryData.consumption/365;
+    let val = 0;
     for(let i = 0; i < hours; i++) {
         if(i % (24*365) == 0 && i != 0) hourly_pvProd *= (1-entryData.panelwear);
+        val += powerPerDay[i%24]*daily_cons-sunPerH[i]*hourly_pvProd; 
         hourlyCostsNoPV[i] = powerPerDay[i%24]*daily_cons*buyPerH[i];
         hourlyCostsPV[i] += buyPerH[i]*Math.max((powerPerDay[i%24]*daily_cons-sunPerH[i]*hourly_pvProd), 0);
         hourlyCostsPV[i] -= sellPerH[i]*Math.max((-powerPerDay[i%24]*daily_cons+sunPerH[i]*hourly_pvProd), 0);
@@ -36,7 +38,6 @@ let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) 
             hourlyCostsNoPV[i] += hourlyCostsNoPV[i-1];
             hourlyCostsPV[i] += hourlyCostsPV[i-1];
         }
-        console.log(hourlySavings[i]);
     }
 
     return new CalcDataH(
