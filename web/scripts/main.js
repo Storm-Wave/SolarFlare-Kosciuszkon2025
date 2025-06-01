@@ -3,7 +3,9 @@ class ROICalculator {
     constructor() {
         this.charts = {
             returnOnInvestment: null,
-            costComparison: null
+            returnOnInvestmentH : null,
+            costComparison: null,
+            costComparisonH: null
         };
     }
     
@@ -34,8 +36,10 @@ class ROICalculator {
         this.createROILabel(data);
 
         // Create charts
-        this.charts.returnOnInvestment = returnOnInvestment(data);
+        this.charts.returnOnInvestment = returnOnInvestment(data, data.calculatedData.yearlySavings.length - 1);
+        this.charts.returnOnInvestmentH = returnOnInvestmentH(data, data.calculatedDataH.hourlySavings.length - 1);
         this.charts.costComparison = createCostComparisonChart(data);
+        this.charts.costComparisonH = createCostComparisonChartH(data);
     }
 
     destroyCharts(){
@@ -47,6 +51,16 @@ class ROICalculator {
         if (this.charts.costComparison) {
             this.charts.costComparison.destroy();
             this.charts.costComparison = null;
+        }
+
+        if (this.charts.returnOnInvestmentH) {
+            this.charts.returnOnInvestment.destroy();
+            this.charts.returnOnInvestment = null;
+        }
+
+        if (this.charts.costComparisonH) {
+            this.charts.costComparisonH.destroy();
+            this.charts.costComparisonH = null;
         }
     }
 

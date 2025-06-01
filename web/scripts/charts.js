@@ -16,21 +16,61 @@ function formatCurrency(value) {
     }).format(value);
 }
 
+// Generate monthly labels for a specific year
+function getMonthlyLabels() {
+    return [
+        'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
+        'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'
+    ];
+}
 // =================== END HELPER FUNCTION ===================
 
 // Return on investment yearly
-function returnOnInvestment(data){
-    const ctx = document.getElementById('returnOnInvestment');
+function returnOnInvestment(data, iters){
+    const ctx = document.getElementById("returnOnInvestment");
     const d = new Date();
     let currYear = d.getFullYear();
     // console.log(data)
     const myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: fillArray(currYear, 24), 
+            labels: fillArray(currYear, iters), 
             datasets: [{
                 label: "Yearly Savings",
                 data: data.calculatedData.yearlySavings, 
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+            title: {
+                display: true,
+                text: 'Skumulowany zwrot z inwestycji na przestrzeni lat'
+            }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    return myChart
+}
+
+// Return on investment hourly
+function returnOnInvestmentH(data, iters){
+    const ctx = document.getElementById("returnOnInvestmentH");
+    const d = new Date();
+    let currYear = d.getFullYear();
+    // console.log(data)
+    const myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: fillArray(currYear, iters), 
+            datasets: [{
+                label: "Hourly Savings",
+                data: data.calculatedDataH.hourlySavings, 
                 borderWidth: 1
             }]
         },
@@ -75,6 +115,54 @@ function createCostComparisonChart(data) {
                 {
                     label: 'Koszty z PV',
                     data: data.calculatedData.yearlyCostsPV,
+                    borderColor: '#51cf66',
+                    backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            plugins: {
+            title: {
+                display: true,
+                text: 'Porównanie inwestycji NoPv/Pv'
+            }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    return myChart
+}
+
+// Cost comparison chart H
+function createCostComparisonChartH(data) {
+    const ctx = document.getElementById('costComparisonChartH');
+    if (!ctx) return;
+    
+    const d = new Date();
+    let currYear = d.getFullYear();
+    
+    const myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: fillArray(1, data.calculatedDataH.hourlyCostsNoPV.length),
+            datasets: [
+                {
+                    label: 'Koszty bez PV',
+                    data: data.calculatedDataH.hourlyCostsNoPV,
+                    borderColor: '#ff6b6b',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Koszty z PV',
+                    data: data.calculatedDataH.hourlyCostsPV,
                     borderColor: '#51cf66',
                     backgroundColor: 'rgba(81, 207, 102, 0.1)',
                     fill: false,
