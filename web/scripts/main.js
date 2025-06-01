@@ -5,7 +5,8 @@ class ROICalculator {
             returnOnInvestmentH : null,
             costComparison: null,
             costComparisonH: null,
-            meanEnergyConsumption: null
+            meanEnergyConsumption: null,
+            reliefInfluence: null
         };
         this.currentData = null; 
         this.setupEventListeners(); 
@@ -73,6 +74,7 @@ class ROICalculator {
         this.charts.costComparison = createCostComparisonChart(data);
         this.charts.costComparisonH = createCostComparisonChartH(data, selectedYear);
         this.charts.meanEnergyConsumption = meanEnergyConsumption();
+        this.charts.reliefInfluence = reliefInfluence(data, data.calculatedData.yearlySavings.length - 1);
     }
 
     destroyCharts(){
@@ -99,6 +101,10 @@ class ROICalculator {
         if (this.charts.meanEnergyConsumption) {
             this.charts.meanEnergyConsumption.destroy();
             this.charts.meanEnergyConsumption = null;
+        }
+        if (this.charts.reliefInfluence) {
+            this.charts.reliefInfluence.destroy();
+            this.charts.reliefInfluence = null;
         }
     }
 
