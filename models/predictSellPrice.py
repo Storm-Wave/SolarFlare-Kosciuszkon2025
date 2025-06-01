@@ -11,13 +11,13 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta, date
 
-features = ['hour', 'month', 'dayofyear']#, "temperature_2m", "windspeed_10m", "cloudcover"]
+features = ['hour', 'month', 'dayofyear', 'weekday', "dayssinceepoch"]
 
 
 # 1. Wczytanie danych
 def load_data(file_path):
     df = pd.read_csv(file_path, parse_dates=[0])
-    df.columns = ['timestamp', 'power']
+    df.columns = ['timestamp', 'sellPrice']
     return df
 
 # 2. Feature engineering
@@ -25,13 +25,14 @@ def extract_features(df):
     df['hour'] = df['timestamp'].dt.hour
     df['month'] = df['timestamp'].dt.month
     df['dayofyear'] = df['timestamp'].dt.dayofyear
+    df['weekday'] = df['timestamp'].dt.weekday
+    df["dayssinceepoch"] = [i.days for i in df["timestamp"] - datetime(1970, 1, 1)]
     return df
 
 # 3. Przygotowanie danych do modelowania
 def prepare_data(df):
-    features = ['hour', 'month', 'dayofyear']
     X = df[features]
-    y = df['power']
+    y = df['sellPrice']
     return train_test_split(X, y, test_size=0.2, random_state=42)
 
 # 4. Trenowanie i wybór najlepszego modelu
@@ -73,21 +74,12 @@ def main(file_path):#, lon, lat):
     start_date = end_date - timedelta(days=365)
 
     print("🔍 Najbliższa stacja (lub siatka ERA5):")
-    #info = get_nearest_station(lat, lon)
-    #print(info)
 
-    #df_weather = get_weather_history(
-    #    lat, lon,
-    #    start_date=start_date.isoformat(),
-    #    end_date=end_date.isoformat()
-    #)
 
     df = load_data(file_path)
-    #df = pd.merge(df, df_weather, on='timestamp')
     df = extract_features(df)
     X_train, X_test, y_train, y_test = prepare_data(df)
     model = train_models(X_train, y_train, X_test, y_test)
-    # save_model(model)
 
     # Wygeneruj przyszłe dane i prognozę
     last_time = df['timestamp'].max()
@@ -100,13 +92,15 @@ def generate_future_features(start_time, years=25):
     df_future['hour'] = df_future['timestamp'].dt.hour
     df_future['month'] = df_future['timestamp'].dt.month
     df_future['dayofyear'] = df_future['timestamp'].dt.dayofyear
+    df_future['weekday'] = df_future['timestamp'].dt.weekday
+    df_future["dayssinceepoch"] = [i.days for i in df_future["timestamp"] - datetime(1970, 1, 1)]
     return df_future
 
-def forecast_future(model, df_future, output_csv='prognoza_25_lat.csv'):
+def forecast_future(model, df_future, output_csv='prognozaCenaSprzedaży_25_lat.csv'):
     predictions = model.predict(df_future[features])
-    df_future['predicted_power'] = predictions
+    df_future['predicted_sellPrice'] = predictions
     df_future = df_future.round(3)
-    df_future[['timestamp', 'predicted_power']].to_csv(output_csv, index=False)
+    df_future[['timestamp', 'predicted_sellPrice']].to_csv(output_csv, index=False)
     print(f"Prognoza zapisana do pliku: {output_csv}")
 
 
@@ -165,6 +159,6 @@ def get_weather_history(lat, lon, start_date, end_date, variables=None):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
-        print("Użycie: python regression_power_model.py <dane.csv> ")#<lon> <lat>")
+        print(f"Użycie: python {sys.argv[0]}.py <dane.csv> ")#<lon> <lat>")
     else:
         main(sys.argv[1])#, sys.argv[2], sys.argv[3])
