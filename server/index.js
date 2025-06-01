@@ -31,16 +31,6 @@ function log(message) {
 }
 
 /**
- * Konwertuje Unix timestamp do formatu ISO (YYYY-MM-DD).
- * @param {string} unixTimestamp
- * @returns {string} sformatowana data
- */
-function formatUnixToDate(unixTimestamp) {
-    const date = new Date(parseInt(unixTimestamp) * 1000); // Unix timestamp w sekundach
-    return date; // Zwraca tylko YYYY-MM-DD
-}
-
-/**
  * Zapisuje dane JSON (z datą w formacie Unix timestamp) do pliku CSV.
  * @param {Array<{date: number, value: number}>} data - Dane wejściowe.
  * @param {string} outputFile - Ścieżka do pliku wynikowego CSV.
@@ -54,7 +44,6 @@ function saveJsonToCsv(data, outputFile = 'dane.csv') {
     const csvHeader = 'datetime,value\n';
     const csvRows = data.map(([timestamp, electricity]) => `${timestamp.toISOString().split('.')[0]},${electricity}`).join('\n');
     const csvContent = csvHeader + csvRows;
-
     // Write to file
     fs.writeFile(outputFile, csvContent, 'utf8', (err) => {
       if (err) {
