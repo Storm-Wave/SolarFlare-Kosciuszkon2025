@@ -172,7 +172,6 @@ def forecast_future(model, df_future, output_csv='prognoza_25_lat.csv'):
     df_future = df_future.round(3)
     df_future[['timestamp', 'predicted_power']].to_csv(output_csv, index=False)
     print(f"Prognoza zapisana do pliku: {output_csv}")
-    df_future.to_csv(output_csv, index=False)
 
 
 if __name__ == '__main__':
