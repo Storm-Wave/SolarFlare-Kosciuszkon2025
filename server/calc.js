@@ -19,23 +19,24 @@ const years = 25;
 const hours = years*365*24;
 
 let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) {
-    let hourlySavings = Array(hours);
-    let hourlyCostsNoPV = Array(hours);
-    let hourlyCostsPV = Array(hours);
+    let hourlySavings =  new Array(hours).fill(0);
+    let hourlyCostsNoPV = new Array(hours).fill(0);
+    let hourlyCostsPV = new Array(hours).fill(0);
     hourlyCostsPV[0] = entryData.pvSize*entryData.pvCostPerKw; //initial cost
-    hourlyCostsNoPV[0] = 0; // no initial cost
-
-    let hourly_use = entryData.panelWear/365/24;
-    let hourly_pvProd = entryData.pvProduction/365/24;
+    let daily_cons = entryData.consumption/365;
+    let mult = 1;
     for(let i = 0; i < hours; i++) {
-        hourlyCostsNoPV[i] += powerPerDay[i%24]*entryData.consumption*buyPerH[i];
-        hourlyCostsPV[i] += buyPerH[i]*Math.max((powerPerDay[i%24]*entryData.consumption-sunPerH[i]*hourly_pvProd), 0);
-        hourlyCostsPV[i] -= sellPerH[i]*Math.max((-powerPerDay[i%24]*entryData.consumption*buyPerH[i]+sunPerH[i]*hourly_pvProd), 0);
-
-        hourly_pvProd *= 1 - hourly_use;
-        hourlySavings[i] = hourlyCostsPV[i] - hourlyCostsNoPV[i];
+        if(i % (24*365) == 0 && i != 0) mult *= (1-entryData.panelwear);
+        hourlyCostsNoPV[i] = powerPerDay[i%24]*daily_cons*buyPerH[i];
+        hourlyCostsPV[i] += buyPerH[i]*Math.max((powerPerDay[i%24]*daily_cons-sunPerH[i]*mult), 0);
+        hourlyCostsPV[i] -= sellPerH[i]*Math.max((-powerPerDay[i%24]*daily_cons+sunPerH[i]*mult), 0);
+        hourlySavings[i] = hourlyCostsNoPV[i] - hourlyCostsPV[i];
+        if(i != 0) {
+            hourlySavings[i] += hourlySavings[i-1];
+            hourlyCostsNoPV[i] += hourlyCostsNoPV[i-1];
+            hourlyCostsPV[i] += hourlyCostsPV[i-1];
+        }
     }
-
 
     return new CalcDataH(
         hourlySavings,
@@ -44,16 +45,13 @@ let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) 
 }
 
 function yearlyReturn(dataH) {
-    let yearlySavings = Array(years);
-    let yearlyCostsPV = Array(years);
-    let yearlyCostsNoPV = Array(years);
-
-    let j = -1;
-    for(let i = 0; i < hours; i++) {
-        if(i % 24*365 == 0) j++;
-        yearlySavings[j] += dataH.hourlySavings[i];
-        yearlyCostsPV[j] += dataH.hourlyCostsNoPV[i];
-        yearlyCostsNoPV[j] += dataH.hourlyCostsPV[i];
+    let yearlySavings = new Array(years).fill(0);
+    let yearlyCostsPV = new Array(years).fill(0);
+    let yearlyCostsNoPV = new Array(years).fill(0);
+    for(let i = 0, j = 0; i < hours; i+=24*365, j++) { 
+        yearlyCostsNoPV[j] = dataH.hourlyCostsNoPV[i];
+        yearlyCostsPV[j] = dataH.hourlyCostsPV[i];
+        yearlySavings[j] = dataH.hourlySavings[i];
     }
 
     return new CalcDataY(

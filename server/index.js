@@ -31,16 +31,6 @@ function log(message) {
 }
 
 /**
- * Konwertuje Unix timestamp do formatu ISO (YYYY-MM-DD).
- * @param {string} unixTimestamp
- * @returns {string} sformatowana data
- */
-function formatUnixToDate(unixTimestamp) {
-    const date = new Date(parseInt(unixTimestamp) * 1000); // Unix timestamp w sekundach
-    return date; // Zwraca tylko YYYY-MM-DD
-}
-
-/**
  * Zapisuje dane JSON (z datą w formacie Unix timestamp) do pliku CSV.
  * @param {Array<{date: number, value: number}>} data - Dane wejściowe.
  * @param {string} outputFile - Ścieżka do pliku wynikowego CSV.
@@ -54,7 +44,6 @@ function saveJsonToCsv(data, outputFile = 'dane.csv') {
     const csvHeader = 'datetime,value\n';
     const csvRows = data.map(([timestamp, electricity]) => `${timestamp.toISOString().split('.')[0]},${electricity}`).join('\n');
     const csvContent = csvHeader + csvRows;
-
     // Write to file
     fs.writeFile(outputFile, csvContent, 'utf8', (err) => {
       if (err) {
@@ -64,6 +53,22 @@ function saveJsonToCsv(data, outputFile = 'dane.csv') {
       }
     });
 }
+
+
+function csvToSun(path) {
+    const csvData = fs.readFileSync(path, 'utf8');
+
+    // Split into lines and remove the header (first line)
+    const lines = csvData.trim().split('\n').slice(1);
+
+    // Parse values into an array
+    const values = lines.map(line => {
+        const parts = line.split(',');
+        return parseFloat(parts[1]);
+    });
+    return values;
+}
+
 
 // ---------------------------
 // Routes
@@ -106,23 +111,32 @@ app.post("/submit", (req, res) => {
             saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
-        const python = spawn('python3', ["../models/predictProduction/py", "../dane.csv", entryData.longtitude, entryData.latitude]);
-        python.on('close', (code) => {
-            console.log(code);
-            return;
-            const calculatedDataH = hourlyReturn(entryData, powerPerDay);
-            const calculatedData = calculateYearlyReturn(calculatedDataH);
+        const python = spawn('python', ["./models/predictProduction.py", "./dane.csv", entryData.longtitude, entryData.latitude]);
+        python.on('close', (_) => {
+            let test1 = Array(25*356*24);
+            let test2 = Array(25*365*24);
+            for(let j = 0; j < 25*365*24; j++) {
+                test1[j] = 1.23;
+                test2[j] = 0.5;
+            }
+            const calculatedDataH = hourlyReturn(entryData, csvToSun("./prognoza_25_lat.csv"), test1, test2, powerPerDay);
+            const calculatedData = yearlyReturn(calculatedDataH);
             res.status(200).json({
               message: "Data received and calculated successfully",
+              calculatedDataH: {
+                hourlySavings: calculatedDataH.hourlySavings,
+                hourlyCostsNoPV: calculatedDataH.hourlyCostsNoPV,
+                hourlyCostsPV: calculatedDataH.hourlyCostsPV
+              },
               calculatedData: {
                 yearlySavings: calculatedData.yearlySavings,
                 yearlyCostsNoPV: calculatedData.yearlyCostsNoPV,
-                yearlyCostsPV: calculatedData.yearlyCostsPV,
+                yearlyCostsPV: calculatedData.yearlyCostsPV
               }
             });
             log(`Sent calculated data`);
             for (const [key, value] of Object.entries(calculatedData)) {
-              log(`  ${key}: ${value}`);
+                log(`  ${key}: ${value}`);
             }
             log(`End of sent calculated data`);
         });

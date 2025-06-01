@@ -26,7 +26,7 @@ async function fetchSolarData({
   dateTo,
   capacity,
   systemLoss = 0.1,
-  tracking = 2,
+  tracking = 0,
   tilt = 35,
   azim = 180,
   dataset = 'merra2',
@@ -65,7 +65,7 @@ async function fetchSolarData({
 
     // Parse JSON response body
     const data = await response.json();
-
+    console.log(data.data);
     // Return relevant data (hourly power output)
     return data.data;
   } catch (error) {
