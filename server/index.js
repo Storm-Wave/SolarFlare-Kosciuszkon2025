@@ -111,7 +111,7 @@ app.post("/submit", (req, res) => {
         saveJsonToCsv(Object.values(arrayData));
       }
     })().then(() => {
-      const python = spawn('./models/.venv/bin/python', ["./models/predictProduction.py", "./dane.csv", entryData.longtitude, entryData.latitude]);
+      const python = spawn('./models/venv/bin/python', ["./models/predictProduction.py", "./dane.csv", entryData.longtitude, entryData.latitude]);
       python.on('close', (_) => {
         let test1 = Array(25 * 356 * 24);
         let test2 = Array(25 * 365 * 24);
@@ -127,7 +127,8 @@ app.post("/submit", (req, res) => {
         }
 
         const calculatedDataH = hourlyReturn(entryData, csvToSun("./prognoza_25_lat.csv"), test1, test2, powerPerDay);
-        const calculatedData = yearlyReturn(calculatedDataH);
+        const calculatedData = yearlyReturn(calculatedDataH, entryData.pvSize * entryData.pvCostPerKw);
+        console.log(calculatedData);
         res.status(200).json({
           message: "Data received and calculated successfully",
           calculatedDataH: {
@@ -136,8 +137,7 @@ app.post("/submit", (req, res) => {
             hourlyCostsPV: calculatedDataH.hourlyCostsPV
           },
           calculatedData: {
-            yearlyRelief: calculatedData.yearlyRelief,
-            yearlyReliefSavings: calculatedData.yearlyReliefSavings,
+            yearlyReliefSavings: calculatedData.yearlySavingsReliefDiff,
             yearlySavings: calculatedData.yearlySavings,
             yearlyCostsNoPV: calculatedData.yearlyCostsNoPV,
             yearlyCostsPV: calculatedData.yearlyCostsPV

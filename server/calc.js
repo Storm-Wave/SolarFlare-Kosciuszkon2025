@@ -7,9 +7,8 @@ class CalcDataH  {
 }
 
 class CalcDataY {
-    constructor(yearlySavings, yearlyRelief, yearlyReliefSavings, yearlyCostsNoPV, yearlyCostsPV) {
-        this.yearlyRelief = yearlyRelief;
-        this.yearlyReliefSavings = yearlyReliefSavings;
+    constructor(yearlySavings, yearlySavingsReliefDiff, yearlyCostsNoPV, yearlyCostsPV) {
+        this.yearlySavingsReliefDiff = yearlySavingsReliefDiff;
         this.yearlySavings = yearlySavings;
         this.yearlyCostsNoPV = yearlyCostsNoPV;
         this.yearlyCostsPV = yearlyCostsPV;
@@ -46,26 +45,23 @@ let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) 
         hourlyCostsPV);
 }
 
-function yearlyReturn(dataH) {
+function yearlyReturn(dataH, initialCost) {
     let yearlySavings = new Array(years).fill(0);
     let yearlyCostsPV = new Array(years).fill(0);
     let yearlyCostsNoPV = new Array(years).fill(0);
-    let yearlyReliefSavings = new Array(years).fill(0);
-    let yearlyRelief = new Array(years).fill(0);
+    let yearlySavingsReliefDiff = new Array(years).fill(6 * initialCost * 0.17);
     for (let i = 0; i < 6; i++) {
-        yearlyRelief[i] = hourlyCostsPV[0] * 0.17;
+        yearlySavingsReliefDiff[i] = (i+1) * initialCost * 0.17;
     }
     for(let i = 0, j = 0; i < hours; i+=24*365, j++) {
         yearlyCostsNoPV[j] = dataH.hourlyCostsNoPV[i];
         yearlyCostsPV[j] = dataH.hourlyCostsPV[i];
         yearlySavings[j] = dataH.hourlySavings[i];
-        yearlyReliefSavings[j] = yearlySavings[j] + yearlyRelief[j];
     }
 
     return new CalcDataY(
-        yearlyRelief,
-        yearlyReliefSavings,
         yearlySavings,
+        yearlySavingsReliefDiff,
         yearlyCostsNoPV,
         yearlyCostsPV,
     );
