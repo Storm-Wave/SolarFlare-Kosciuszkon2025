@@ -8,55 +8,102 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 import joblib
 import matplotlib.pyplot as plt
 import requests
-import pandas as pd
 from datetime import datetime, timedelta, date
 
-# 1. Wczytanie danych
+features = ['hour', 'month', 'dayofyear']#, "temperature_2m", "windspeed_10m", "cloudcover"]
+
 def load_data(file_path):
     df = pd.read_csv(file_path, parse_dates=[0])
     df.columns = ['timestamp', 'power']
-    #df["ID"] = f"{df['timestamp'].dt.dayofyear}-{df['timestamp'].dt.hour}"
     return df
 
-# 6. Główna funkcja
-def main(file_path, lon, lat):
-    MAX_END_DATE = date(2025, 1, 30)  # tymczasowo przyjmujemy jako max dostępne
+def extract_features(df):
+    df['hour'] = df['timestamp'].dt.hour
+    df['month'] = df['timestamp'].dt.month
+    df['dayofyear'] = df['timestamp'].dt.dayofyear
+    return df
 
+def prepare_data(df):
+    features = ['hour', 'month', 'dayofyear']
+    X = df[features]
+    y = df['power']
+    return train_test_split(X, y, test_size=0.2, random_state=42)
+
+def train_models(X_train, y_train, X_test, y_test):
+    models = {
+        'LinearRegression': LinearRegression(),
+        'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42),
+        'GradientBoosting': GradientBoostingRegressor(n_estimators=100, random_state=42),
+    }
+    best_model = None
+    best_rmse = float('inf')
+    for name, model in models.items():
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
+        rmse = mean_squared_error(y_test, preds)
+        r2 = r2_score(y_test, preds)
+        print(f"{name}: RMSE = {rmse:.2f}, R² = {r2:.3f}")
+
+        if rmse < best_rmse:
+            best_rmse = rmse
+            best_model = model
+            best_model_name = name
+
+    return best_model
+
+
+def main(file_path):#, lon, lat):
+
+    MAX_END_DATE = date(2025, 1, 30)  # tymczasowo przyjmujemy jako max dostępne
+    today = date.today()
+    df = load_data(file_path)
+    df = extract_features(df)
+    X_train, X_test, y_train, y_test = prepare_data(df)
+    model = train_models(X_train, y_train, X_test, y_test)
+    last_time = df['timestamp'].max()
+    df_future = generate_future_features(start_time=last_time + pd.Timedelta(hours=1))
+    forecast_future(model, df_future)
+
+'''
+    # Parametry czasowe
+    MAX_END_DATE = date(2025, 1, 30)
     today = date.today()
     end_date = min(today - timedelta(days=1), MAX_END_DATE)
     start_date = end_date - timedelta(days=9125)
-    df = load_data(file_path)
 
-    ##print("🔍 Najbliższa stacja (lub siatka ERA5):")
+    # Pobranie danych
     info = get_nearest_station(lat, lon)
-    ##print(info)
-
     df_weather = get_weather_history(
         lat, lon,
         start_date=start_date.isoformat(),
         end_date=end_date.isoformat()
     )
 
-    temp = []
-    x = start_date
-    counter = 0
-    i = 0
-    # oktet obniza o 10%, stopien powyzej 15 obniza o 0.4%
-    while counter < 9125 * 24:
-        temp.append([x, df.iloc[i, 1] * max(0, 1 - (0.4*(max(df_weather.iloc[counter, 1] - 15, 0))) - (0.1 * df_weather.iloc[counter, 2]))])
-        i = (i + 1) % df.shape[0]
-        counter += 1
-        x += timedelta(hours=1)
-    df = pd.DataFrame(temp)
-    df.columns = ['timestamp', 'predicted_power']
-    df.to_csv("prognazowane_25_lat.csv", index=False)
-    print(df)
+    # Konwersja danych do NumPy
+    weather_temp = df_weather.iloc[:9125*24, 1].to_numpy()
+    weather_clouds = df_weather.iloc[:9125*24, 2].to_numpy()
+    base_power_cycle = np.resize(df.iloc[:, 1].to_numpy(), 9125 * 24)  # cykliczne dopasowanie długości
 
+    # Obliczenia wektorowe
+    temp_correction = 0.4 * np.maximum(weather_temp - 15, 0)
+    cloud_correction = 0.1 * weather_clouds
+    multiplier = np.clip(1 - temp_correction - cloud_correction, 0, None)
 
+    predicted_power = base_power_cycle * multiplier
 
+    # Generowanie znaczników czasu
+    timestamps = pd.date_range(start=MAX_END_DATE, periods=9125*24, freq='h')
 
+    # Tworzenie DataFrame i zapis do pliku
+    df_result = pd.DataFrame({
+        'timestamp': timestamps,
+        'predicted_power': predicted_power
+    })
 
+    df_result.to_csv("prognoza_25_lat.csv", index=False)
+    '''
 
+'''
 def get_nearest_station(lat, lon):
     url = "https://archive-api.open-meteo.com/v1/era5"
     params = {
@@ -79,9 +126,9 @@ def get_nearest_station(lat, lon):
     }
 
     return station_info
+'''
 
-
-
+'''
 def get_weather_history(lat, lon, start_date, end_date, variables=None):
     if variables is None:
         variables = ["temperature_2m", "windspeed_10m", "cloudcover"]
@@ -107,12 +154,30 @@ def get_weather_history(lat, lon, start_date, end_date, variables=None):
         df[var] = data["hourly"][var]
 
     df["timestamp"] = pd.to_datetime(df["timestamp"])
-    #df["ID"] = f"{df['timestamp'].dt.dayofyear}-{df['timestamp'].dt.hour}"
     return df
+'''
+
+
+def generate_future_features(start_time, years=25):
+    future_dates = pd.date_range(start=start_time, periods=25*365*24, freq='h')
+    df_future = pd.DataFrame({'timestamp': future_dates})
+    df_future['hour'] = df_future['timestamp'].dt.hour
+    df_future['month'] = df_future['timestamp'].dt.month
+    df_future['dayofyear'] = df_future['timestamp'].dt.dayofyear
+    return df_future
+
+def forecast_future(model, df_future, output_csv='prognoza_25_lat.csv'):
+    predictions = model.predict(df_future[features])
+    df_future['predicted_power'] = predictions
+    df_future = df_future.round(3)
+    df_future[['timestamp', 'predicted_power']].to_csv(output_csv, index=False)
+    print(f"Prognoza zapisana do pliku: {output_csv}")
+    df_future.to_csv(output_csv, index=False)
+
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
         print("Użycie: python regression_power_model.py <dane.csv> ")#<lon> <lat>")
     else:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+        main(sys.argv[1])#, sys.argv[2], sys.argv[3])
