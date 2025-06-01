@@ -1,5 +1,7 @@
 FROM buildpack-deps:bookworm
 
+SHELL ["/bin/bash", "-c"]
+
 RUN groupadd --gid 1000 node \
   && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
 
@@ -71,9 +73,29 @@ RUN set -ex \
   && yarn --version \
   && rm -rf /tmp/*
 
+RUN apt update
+
+RUN apt install python3.11-venv -y \
+    && python3 -m venv ~/models/.venv
+
 EXPOSE 3000
 
-COPY docker-entrypoint.sh /usr/local/bin/
+WORKDIR ~/
+COPY ./server ~/server
+COPY ./web ~/web
+COPY ./models ~/models
+COPY dane.csv .
+COPY daneBuyPrice.csv .
+COPY daneSellPrice.csv .
+COPY package.json .
+COPY package-lock.json .
+COPY prognoza_25_lat.csv .
+COPY docker-entrypoint.sh .
+
+COPY ./models/requirements.txt /root/models/requirements.txt
+RUN source ~/models/.venv/bin/activate \
+  && pip install -r /root/models/requirements.txt
+
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-CMD [ "node" ]
+CMD [ "node" , "./server/index.js"]
