@@ -135,9 +135,9 @@ app.post("/submit", (req, res) => {
             res.status(200).json({
               message: "Data received and calculated successfully",
               calculatedDataH: {
-                hourlySavings: calculatedDataH.hourlySavings;
-                hourlyCostsNoPV: calculatedDataH.hourlyCostsNoPV;
-                hourlyCostsPV: calculatedDataH.hourlyCostsPV;
+                hourlySavings: calculatedDataH.hourlySavings,
+                hourlyCostsNoPV: calculatedDataH.hourlyCostsNoPV,
+                hourlyCostsPV: calculatedDataH.hourlyCostsPV
               },
               calculatedData: {
                 yearlySavings: calculatedData.yearlySavings,
