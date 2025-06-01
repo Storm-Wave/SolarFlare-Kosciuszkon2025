@@ -7,7 +7,9 @@ class CalcDataH  {
 }
 
 class CalcDataY {
-    constructor(yearlySavings, yearlyCostsNoPV, yearlyCostsPV) {
+    constructor(yearlySavings, yearlyRelief, yearlyReliefSavings, yearlyCostsNoPV, yearlyCostsPV) {
+        this.yearlyRelief = yearlyRelief;
+        this.yearlyReliefSavings = yearlyReliefSavings;
         this.yearlySavings = yearlySavings;
         this.yearlyCostsNoPV = yearlyCostsNoPV;
         this.yearlyCostsPV = yearlyCostsPV;
@@ -18,7 +20,7 @@ class CalcDataY {
 const years = 25;
 const hours = years*365*24;
 
-let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) {
+let hourlyReturn = function(entryData, sunPerH, buyPerH, sellPerH, powerPerDay) {1
     let hourlySavings =  new Array(hours).fill(0);
     let hourlyCostsNoPV = new Array(hours).fill(0);
     let hourlyCostsPV = new Array(hours).fill(0);
@@ -48,13 +50,21 @@ function yearlyReturn(dataH) {
     let yearlySavings = new Array(years).fill(0);
     let yearlyCostsPV = new Array(years).fill(0);
     let yearlyCostsNoPV = new Array(years).fill(0);
-    for(let i = 0, j = 0; i < hours; i+=24*365, j++) { 
+    let yearlyReliefSavings = new Array(years).fill(0);
+    let yearlyRelief = new Array(years).fill(0);
+    for (let i = 0; i < 6; i++) {
+        yearlyRelief[i] = hourlyCostsPV[0] * 0.17;
+    }
+    for(let i = 0, j = 0; i < hours; i+=24*365, j++) {
         yearlyCostsNoPV[j] = dataH.hourlyCostsNoPV[i];
         yearlyCostsPV[j] = dataH.hourlyCostsPV[i];
         yearlySavings[j] = dataH.hourlySavings[i];
+        yearlyReliefSavings[j] = yearlySavings[j] + yearlyRelief[j];
     }
 
     return new CalcDataY(
+        yearlyRelief,
+        yearlyReliefSavings,
         yearlySavings,
         yearlyCostsNoPV,
         yearlyCostsPV,
