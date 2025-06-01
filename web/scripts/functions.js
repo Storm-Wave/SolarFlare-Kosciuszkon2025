@@ -31,3 +31,4 @@ function setCoordinates(lat, lng){
     manualLng.value = lng;
 
 }
+
