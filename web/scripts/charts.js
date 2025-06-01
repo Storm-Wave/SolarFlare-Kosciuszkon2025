@@ -50,8 +50,12 @@ function returnOnInvestment(data, iters){
             },
             scales: {
                 y: {
-                    beginAtZero: true
-                }
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Kwota (PLN)'
+                    }
+                },
             }
         }
     });
@@ -59,31 +63,52 @@ function returnOnInvestment(data, iters){
 }
 
 // Return on investment hourly
-function returnOnInvestmentH(data, iters){
+function returnOnInvestmentH(data, selectedYear){
     const ctx = document.getElementById("returnOnInvestmentH");
     const d = new Date();
     let currYear = d.getFullYear();
-    // console.log(data)
+    
+    const yearIndex = selectedYear - currYear;
+    
+    const startHour = yearIndex * 8760;
+    const endHour = startHour + 8760;
+    
+    const yearlyHourlyData = data.calculatedDataH.hourlySavings.slice(startHour, endHour);
+    
     const myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: fillArray(currYear, iters), 
+            labels: fillArray(1, yearlyHourlyData.length), 
             datasets: [{
                 label: "Hourly Savings",
-                data: data.calculatedDataH.hourlySavings, 
+                data: yearlyHourlyData,
                 borderWidth: 1
             }]
         },
         options: {
             plugins: {
-            title: {
-                display: true,
-                text: 'Skumulowany zwrot z inwestycji na przestrzeni lat'
-            }
+                title: {
+                    display: true,
+                    text: 'Godzinowe oszczędności w roku ' + selectedYear
+                }
             },
             scales: {
-                y: {
-                    beginAtZero: true
+                 y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Kwota (PLN)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxTicksLimit: 12,
+                        callback: function(value, index) {
+                            const monthNames = getMonthlyLabels();
+                            const monthIndex = Math.floor((index / yearlyHourlyData) * 12);
+                            return monthIndex < 12 ? monthNames[monthIndex] : '';
+                        }
+                    }
                 }
             }
         }
@@ -131,8 +156,12 @@ function createCostComparisonChart(data) {
             },
             scales: {
                 y: {
-                    beginAtZero: true
-                }
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Kwota (PLN)'
+                    }
+                },
             }
         }
     });
@@ -140,21 +169,28 @@ function createCostComparisonChart(data) {
 }
 
 // Cost comparison chart H
-function createCostComparisonChartH(data) {
+function createCostComparisonChartH(data, selectedYear) {
     const ctx = document.getElementById('costComparisonChartH');
     if (!ctx) return;
     
     const d = new Date();
     let currYear = d.getFullYear();
+    const yearIndex = selectedYear - currYear;
+    
+    const startHour = yearIndex * 8760;
+    const endHour = startHour + 8760;
+    
+    const yearlyNoPVData = data.calculatedDataH.hourlyCostsNoPV.slice(startHour, endHour);
+    const yearlyPVData = data.calculatedDataH.hourlyCostsPV.slice(startHour, endHour);
     
     const myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: fillArray(1, data.calculatedDataH.hourlyCostsNoPV.length),
+            labels: fillArray(1, yearlyNoPVData.length), 
             datasets: [
                 {
                     label: 'Koszty bez PV',
-                    data: data.calculatedDataH.hourlyCostsNoPV,
+                    data: yearlyNoPVData,
                     borderColor: '#ff6b6b',
                     backgroundColor: 'rgba(255, 107, 107, 0.1)',
                     fill: false,
@@ -162,7 +198,7 @@ function createCostComparisonChartH(data) {
                 },
                 {
                     label: 'Koszty z PV',
-                    data: data.calculatedDataH.hourlyCostsPV,
+                    data: yearlyPVData,
                     borderColor: '#51cf66',
                     backgroundColor: 'rgba(81, 207, 102, 0.1)',
                     fill: false,
@@ -174,12 +210,26 @@ function createCostComparisonChartH(data) {
             plugins: {
             title: {
                 display: true,
-                text: 'Porównanie inwestycji NoPv/Pv'
+                text: 'Porównanie inwestycji NoPv/Pv w roku ' + selectedYear
             }
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Kwota (PLN)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxTicksLimit: 12,
+                        callback: function(value, index) {
+                            const monthNames = getMonthlyLabels();
+                            const monthIndex = Math.floor((index / 8760) * 12);
+                            return monthIndex < 12 ? monthNames[monthIndex] : '';
+                        }
+                    }
                 }
             }
         }

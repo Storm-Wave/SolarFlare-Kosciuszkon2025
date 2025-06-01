@@ -1,4 +1,3 @@
-// Main application logic
 class ROICalculator {
     constructor() {
         this.charts = {
@@ -7,20 +6,49 @@ class ROICalculator {
             costComparison: null,
             costComparisonH: null
         };
+        this.currentData = null; 
+        this.setupEventListeners(); 
+    }
+    
+    setupEventListeners() {
+        // Add event listener for year selection
+        const yearInput = document.getElementById('yearChoose');
+        if (yearInput) {
+            yearInput.addEventListener('change', (event) => {
+                this.updateHourlyCharts(parseInt(event.target.value));
+            });
+        }
+    }
+    
+    updateHourlyCharts(selectedYear) {
+        if (!this.currentData) {
+            console.log('No data available to update charts');
+            return;
+        }
+        
+        if (this.charts.returnOnInvestmentH) {
+            this.charts.returnOnInvestmentH.destroy();
+            this.charts.returnOnInvestmentH = null;
+        }
+        
+        if (this.charts.costComparisonH) {
+            this.charts.costComparisonH.destroy();
+            this.charts.costComparisonH = null;
+        }
+        
+        this.charts.returnOnInvestmentH = returnOnInvestmentH(this.currentData, selectedYear);
+        this.charts.costComparisonH = createCostComparisonChartH(this.currentData, selectedYear);
     }
     
     async submit() {
         try {
-            // Validate inputs
             if (!validateInputs()) {
                 console.log('Please fill in all required fields');
                 return;
             }
             
-            // Get form data
             const formData = getFormData();
             
-            // Submit to API
             const response = await submitData(formData)
             this.processResponse(response);           
         } catch (error) {
@@ -30,16 +58,19 @@ class ROICalculator {
     }
     
     processResponse(data) {
+        this.currentData = data;
+        
         this.destroyCharts();
 
-        // create ROI info
         this.createROILabel(data);
+        
+        const yearInput = document.getElementById('yearChoose');
+        const selectedYear = yearInput ? parseInt(yearInput.value) : 2025;
 
-        // Create charts
         this.charts.returnOnInvestment = returnOnInvestment(data, data.calculatedData.yearlySavings.length - 1);
-        this.charts.returnOnInvestmentH = returnOnInvestmentH(data, data.calculatedDataH.hourlySavings.length - 1);
+        this.charts.returnOnInvestmentH = returnOnInvestmentH(data, selectedYear);
         this.charts.costComparison = createCostComparisonChart(data);
-        this.charts.costComparisonH = createCostComparisonChartH(data);
+        this.charts.costComparisonH = createCostComparisonChartH(data, selectedYear);
     }
 
     destroyCharts(){
@@ -54,8 +85,8 @@ class ROICalculator {
         }
 
         if (this.charts.returnOnInvestmentH) {
-            this.charts.returnOnInvestment.destroy();
-            this.charts.returnOnInvestment = null;
+            this.charts.returnOnInvestmentH.destroy(); 
+            this.charts.returnOnInvestmentH = null;
         }
 
         if (this.charts.costComparisonH) {
@@ -108,10 +139,8 @@ class ROICalculator {
     }
 }
 
-// Initialize application
 const calculator = new ROICalculator();
 
-// Global submit function (called from HTML)
 function submit() {
     calculator.submit();
 }

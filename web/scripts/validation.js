@@ -18,7 +18,7 @@ function validateInputs() {
     clearAllErrors();
     
     const fields = [
-        'consumption', 'buyPrice', 'pvSize', 'pvProduction', 
+        'consumption', 'buyPrice', 'pvSize',
         'sellPrice', 'pvCostPerKw', 'panelwear', 'priceIncrease', 'longtitude', 'latitude'
     ];
     
