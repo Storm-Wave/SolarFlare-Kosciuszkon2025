@@ -36,7 +36,7 @@ function returnOnInvestment(data, iters){
         data: {
             labels: fillArray(currYear, iters), 
             datasets: [{
-                label: "Yearly Savings",
+                label: "Roczne oszczędności",
                 data: data.calculatedData.yearlySavings, 
                 borderWidth: 1
             }]
@@ -80,7 +80,7 @@ function returnOnInvestmentH(data, selectedYear){
         data: {
             labels: fillArray(1, yearlyHourlyData.length), 
             datasets: [{
-                label: "Hourly Savings",
+                label: "Godzinne ooszczędności",
                 data: yearlyHourlyData,
                 borderWidth: 1
             }]
@@ -231,6 +231,56 @@ function createCostComparisonChartH(data, selectedYear) {
                         }
                     }
                 }
+            }
+        }
+    });
+    return myChart
+}
+
+function meanEnergyConsumption(){
+    const powerPerDay = [
+    0.009756097560975611, 0.009756097560975611, 0.007317073170731708, 0.009756097560975611,
+    0.02439024390243903, 0.04634146341463415, 0.051219512195121955, 0.04146341463414635,
+    0.04146341463414635, 0.03658536585365854, 0.04146341463414635, 0.04634146341463415,
+    0.06097560975609757, 0.04878048780487806, 0.034146341463414644, 0.034146341463414644,
+    0.034146341463414644, 0.06097560975609757, 0.10975609756097562, 0.0902439024390244,
+    0.06097560975609757, 0.04634146341463415, 0.03658536585365854, 0.017073170731707,
+    ]
+
+    const ctx = document.getElementById("meanEnergyConsumption");
+    // console.log(data)
+    const myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => {
+            if (i === 0) return '12 AM';
+            if (i < 12) return `${i} AM`;
+            if (i === 12) return '12 PM';
+            return `${i - 12} PM`;
+            }), 
+            datasets: [{
+                label: "Średnie zużycie",
+                data: powerPerDay, 
+                backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                borderColor: 'rgb(0, 0, 0)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+            title: {
+                display: true,
+                text: 'Średnie zużycie energi przez gospodarstwo domowe w Unii Europejskiej (kWh)'
+            }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Zużycie (kWh)'
+                    }
+                },
             }
         }
     });
