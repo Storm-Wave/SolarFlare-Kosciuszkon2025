@@ -164,7 +164,14 @@ def get_weather_history(lat, lon, start_date, end_date, variables=None):
 
 if __name__ == '__main__':
     import sys
+<<<<<<< HEAD
     if len(sys.argv) < 2:
         print("Użycie: python regression_power_model.py <dane.csv> ")#<lon> <lat>")
     else:
         main(sys.argv[1])#, sys.argv[2], sys.argv[3])
+=======
+    if len(sys.argv) != 4:
+        print("Użycie: python regression_power_model.py <dane.csv> <lon> <lat>")
+    else:
+        main(sys.argv[1], sys.argv[2], sys.argv[3])
+>>>>>>> 70df5de4b33c4c91d842f9d6b9c3f081f78d6633
