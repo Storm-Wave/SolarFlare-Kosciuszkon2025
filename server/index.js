@@ -65,6 +65,22 @@ function saveJsonToCsv(data, outputFile = 'dane.csv') {
     });
 }
 
+
+function csvToSun(path) {
+    const csvData = fs.readFileSync(path, 'utf8');
+
+    // Split into lines and remove the header (first line)
+    const lines = csvData.trim().split('\n').slice(1);
+
+    // Parse values into an array
+    const values = lines.map(line => {
+        const parts = line.split(',');
+        return parseFloat(parts[1]);
+    });
+    return values;
+}
+
+
 // ---------------------------
 // Routes
 // ---------------------------
@@ -106,12 +122,16 @@ app.post("/submit", (req, res) => {
             saveJsonToCsv(Object.values(arrayData));
         }
     })().then(()=>{
-        const python = spawn('python3', ["../models/predictProduction/py", "../dane.csv", entryData.longtitude, entryData.latitude]);
-        python.on('close', (code) => {
-            console.log(code);
-            return;
-            const calculatedDataH = hourlyReturn(entryData, powerPerDay);
-            const calculatedData = calculateYearlyReturn(calculatedDataH);
+        const python = spawn('python', ["./models/predictProduction.py", "./dane.csv", entryData.longtitude, entryData.latitude]);
+        python.on('close', (_) => {
+            let test1 = Array(25*356*24);
+            let test2 = Array(25*365*24);
+            for(let j = 0; j < 25*365*24; j++) {
+                test1[j] = 1.23;
+                test2[j] = 0.5;
+            }
+            const calculatedDataH = hourlyReturn(entryData, csvToSun("./prognoza_25_lat.csv"), test1, test2, powerPerDay);
+            const calculatedData = yearlyReturn(calculatedDataH);
             res.status(200).json({
               message: "Data received and calculated successfully",
               calculatedData: {
@@ -122,7 +142,7 @@ app.post("/submit", (req, res) => {
             });
             log(`Sent calculated data`);
             for (const [key, value] of Object.entries(calculatedData)) {
-              log(`  ${key}: ${value}`);
+                log(`  ${key}: ${value}`);
             }
             log(`End of sent calculated data`);
         });
