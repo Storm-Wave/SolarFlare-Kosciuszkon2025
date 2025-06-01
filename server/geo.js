@@ -65,7 +65,6 @@ async function fetchSolarData({
 
     // Parse JSON response body
     const data = await response.json();
-    console.log(data.data);
     // Return relevant data (hourly power output)
     return data.data;
   } catch (error) {
