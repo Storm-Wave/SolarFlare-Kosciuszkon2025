@@ -115,9 +115,12 @@ app.post("/submit", (req, res) => {
         python.on('close', (_) => {
             let test1 = Array(25*356*24);
             let test2 = Array(25*365*24);
-            for(let j = 0; j < 25*365*24; j++) {
-                test1[j] = 1.23;
-                test2[j] = 0.5;
+            test1[0] = entryData.buyPrice;
+            test2[0] = entryData.sellPrice;
+            for(let j = 1; j < 25*365*24; j++) {
+                if(j%24*365 == 0) j*=entryData.priceIncrease;
+                test1[j] = test1[j-1];
+                test2[j] = test2[j-1];
             }
             const calculatedDataH = hourlyReturn(entryData, csvToSun("./prognoza_25_lat.csv"), test1, test2, powerPerDay);
             const calculatedData = yearlyReturn(calculatedDataH);
